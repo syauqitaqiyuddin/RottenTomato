@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "220754928375",
+    "project_id": "rotten-tomato",
+    "storage_bucket": "rotten-tomato.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:220754928375:android:2e494c77d6c9e937fa69f2",
+        "android_client_info": {
+          "package_name": "com.example.rottentomato"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA9BpkyOR4THJlj9MOUHV6T__oa9h6CEoQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
