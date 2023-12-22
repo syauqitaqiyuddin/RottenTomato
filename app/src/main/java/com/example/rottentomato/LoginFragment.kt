@@ -4,178 +4,97 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
+import androidx.fragment.app.Fragment
 import com.example.rottentomato.databinding.LoginFragmentBinding
+import com.example.rottentomato.databinding.RegisterFragmentBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.google.android.material.textfield.TextInputLayout
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.concurrent.CompletableFuture
 
-
 class LoginFragment : Fragment() {
-    private lateinit var binding: LoginFragmentBinding
-    private lateinit var firebaseAuth: FirebaseAuth
-    private var db = FirebaseFirestore.getInstance()
+    private lateinit var binding : LoginFragmentBinding
+    private lateinit var auth: FirebaseAuth
     private lateinit var sharedPreferences: SharedPreferences
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+    }
+    private lateinit var firebaseAuth: FirebaseAuth
+    private val firestore = FirebaseFirestore.getInstance()
 
     companion object {
         const val EXTRA_EMAIL = "extra_email"
-        const val EXTRA_PASS = "extra_password"
+        const val EXTRA_PASS = "extra_pass"
     }
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
+        inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         binding = LoginFragmentBinding.inflate(inflater, container, false)
-        val view = binding.root
+        return binding.root
+    }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
         firebaseAuth = FirebaseAuth.getInstance()
-        sharedPreferences =
-            requireContext().getSharedPreferences("loginPrefs", Context.MODE_PRIVATE)
 
-        val emailLayout: TextInputLayout = binding.emailField
-        val passwordLayout: TextInputLayout = binding.passwordField
+        val sharedPreferences = requireActivity().getSharedPreferences("SHARED_PREF", Context.MODE_PRIVATE)
+        val editor: SharedPreferences.Editor = sharedPreferences.edit()
+        editor.putString("id", firebaseAuth.currentUser?.uid)
+        editor.putString("email", firebaseAuth.currentUser?.email)
+        editor.putString("password", binding.password.text.toString().trim())
+        editor.apply()
 
-        val emailEditText: TextInputEditText = binding.email
-        val passwordEditText: TextInputEditText = binding.password
-
-        val loginButton: Button = binding.loginBtn
-
-        loginButton.setOnClickListener {
-            val email = emailEditText.text.toString().trim()
-            val password = passwordEditText.text.toString().trim()
-
-            if (validateInputs(emailLayout, passwordLayout, email, password)) {
-                loginUser(email, password)
-            }
-        }
-        // Check if the user is already logged in
-        if (isLoggedIn()) {
-            redirectToAppropriateScreen()
-        }
-        return view
-    }
-
-    private fun validateInputs(
-        emailLayout: TextInputLayout,
-        passwordLayout: TextInputLayout,
-        email: String,
-        password: String
-    ): Boolean {
-        if (email.isEmpty()) {
-            emailLayout.error = "Email is required"
-            return false
+        if (sharedPreferences.getBoolean("isLogin", false)) {
+            isUserAdmin(sharedPreferences.getString("email", "").toString())
         }
 
-        if (password.isEmpty()) {
-            passwordLayout.error = "Password is required"
-            return false
-        }
+        with(binding) {
+            loginBtn.setOnClickListener {
+                val email = email.text.toString().trim()
+                val password = password.text.toString().trim()
 
-        // Reset errors if all inputs are valid
-        emailLayout.error = null
-        passwordLayout.error = null
-
-        return true
-    }
-
-    private fun isPasswordValid(email: String, password: String): CompletableFuture<Boolean> {
-        val completableFuture = CompletableFuture<Boolean>()
-
-        // Ambil data pengguna dari Firestore berdasarkan email
-        db.collection("users")
-            .whereEqualTo("email", email)
-            .get()
-            .addOnSuccessListener { documents ->
-                for (document in documents) {
-                    val savedPassword = document.getString("password")
-                    // Bandingkan password yang diinputkan dengan password yang disimpan
-                    if (savedPassword != null && savedPassword == password) {
-                        completableFuture.complete(true) // Password cocok
-                        return@addOnSuccessListener
-                    }
-                }
-                completableFuture.complete(false) // Password tidak cocok
-            }
-            .addOnFailureListener { e ->
-                // Gagal mengambil data pengguna
-                showError("Failed to retrieve user data")
-                completableFuture.complete(false)
-            }
-        return completableFuture
-    }
-
-    private fun loginUser(email: String, password: String) {
-        firebaseAuth.signInWithEmailAndPassword(email, password)
-            .addOnCompleteListener(requireActivity()) { task ->
-                if (task.isSuccessful) {
-                    // Login berhasil
-                    isPasswordValid(email, password).thenApply { isValid ->
-                        if (isValid) {
-                            saveLoginStatus(true)
-                            redirectToAppropriateScreen()
-                        } else {
-                            // Password tidak cocok
-                            saveLoginStatus(false)
-                            showError("Invalid password")
-                        }
-                    }
+                if (email.isEmpty() || password.isEmpty()) {
+                    Toast.makeText(requireContext(), "Please fill all the fields", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Login gagal
-                    saveLoginStatus(false)
-                    showError("Invalid email or password")
-                    // Tambahkan logika sesuai kebutuhan setelah login gagal
+                    firebaseAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener { task ->
+                            if (task.isSuccessful) {
+                                isUserAdmin(email)
+                            } else {
+                                Toast.makeText(requireContext(), "Username or Password is incorrect", Toast.LENGTH_SHORT).show()
+                            }
+                        }
                 }
             }
+        }
     }
 
     private fun isUserAdmin(email: String) {
-        val admin = firebaseAuth.currentUser
-        if (admin != null){
-            if (admin.email == "admin@gmail.com") {
-                // Pengguna adalah admin
+        val user = firebaseAuth.currentUser
+        if (user != null) {
+            if (user.email == "admin@gmail.com") {
                 startActivity(Intent(requireContext(), AdminActivity::class.java).apply {
                     putExtra(EXTRA_EMAIL, email)
                     putExtra(EXTRA_PASS, binding.password.text.toString().trim())
                 })
             } else {
-                // Pengguna bukan admin
-                startActivity(Intent(requireContext(), MainActivity::class.java).apply {
+                startActivity(Intent(requireContext(), HomeScreenActivity::class.java).apply {
                     putExtra(EXTRA_EMAIL, email)
                     putExtra(EXTRA_PASS, binding.password.text.toString().trim())
                 })
             }
         }
-    }
-
-    private fun saveLoginStatus(isLoggedIn: Boolean) {
-        // Simpan status login ke SharedPreferences
-        val editor = sharedPreferences.edit()
-        editor.putBoolean("isLoggedIn", isLoggedIn)
-        editor.apply()
-    }
-
-    private fun isLoggedIn(): Boolean {
-        // Periksa status login dari SharedPreferences
-        return sharedPreferences.getBoolean("isLoggedIn", false)
-    }
-
-    private fun redirectToAppropriateScreen() {
-        // Arahkan ke halaman yang sesuai berdasarkan status admin
-        val email = sharedPreferences.getString("email", "") ?: ""
-        isUserAdmin(email)
-    }
-
-    private fun showError(errorMessage: String) {
-        // Tampilkan pesan kesalahan kepada pengguna
-        Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()
     }
 }

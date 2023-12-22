@@ -16,6 +16,9 @@
         android:theme="@style/Theme.RottenTomato"
         tools:targetApi="31">
         <activity
+            android:name=".MovieDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".AddFilmActivity"
             android:exported="false" />
         <activity

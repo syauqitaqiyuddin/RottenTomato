@@ -63,17 +63,19 @@ class AdminActivity : AppCompatActivity() {
 
     private fun signOut() {
         // Hapus sesi login dari SharedPreferences
-        val sharedPreferences = getSharedPreferences("loginPrefs", Context.MODE_PRIVATE)
+        val sharedPreferences = getSharedPreferences("user_data", Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
         editor.putBoolean("isLoggedIn", false)
         editor.apply()
+//        editor.clear()
 
         // Logout dari Firebase
         FirebaseAuth.getInstance().signOut()
 
         // Kembali ke MainActivity
-        val intent = Intent(this, MainActivity::class.java)
-        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        val intent = Intent(this@AdminActivity, MainActivity::class.java)
+//        intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
         startActivity(intent)
+        finish()
     }
 }

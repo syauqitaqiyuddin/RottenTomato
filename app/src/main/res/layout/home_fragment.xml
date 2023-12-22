@@ -39,13 +39,12 @@
             android:textColor="@color/black"
             android:fontFamily="@font/inter_regular" />
         <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rVhome"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="20dp"
             android:layout_below="@id/txt_trending_movie"
+            tools:listitem="@layout/item_film_viewholder"
             />
-
     </RelativeLayout>
-
-
 </FrameLayout>
