@@ -7,24 +7,54 @@
     tools:context=".AdminActivity">
 
     <TextView
-        android:id="@+id/movie_list"
+        android:id="@+id/signOutBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Available Movie"
-        android:textSize="20sp"
+        android:layout_alignParentEnd="true"
         android:layout_marginTop="20dp"
-        android:layout_marginHorizontal="30dp"/>
+        android:paddingEnd="30sp"
+        android:text="Sign Out"
+        android:textSize="15sp"
+        android:textColor="@color/red"/>
+    
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="700dp"
-        android:layout_marginTop="50dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+        <TextView
+            android:id="@+id/movie_list"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Available Movie"
+            android:textSize="20sp"
+            android:layout_marginTop="20dp"
+            android:layout_marginHorizontal="30dp" />
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/recycleView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="15dp"
-            android:layout_below="@id/movie_list" />
+            android:layout_height="match_parent"
+            android:layout_below="@id/movie_list"
+            tools:listitem="@layout/item_film_viewholder"
+            />
     </LinearLayout>
+
+<!--    <TextView-->
+<!--        android:id="@+id/movie_list"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:text="Available Movie"-->
+<!--        android:textSize="20sp"-->
+<!--        android:layout_marginTop="20dp"-->
+<!--        android:layout_marginHorizontal="30dp"/>-->
+
+<!--    <androidx.recyclerview.widget.RecyclerView-->
+<!--        android:id="@+id/recycleView"-->
+<!--        android:layout_width="match_parent"-->
+<!--        android:layout_height="match_parent"-->
+<!--        android:layout_below="@id/movie_list"-->
+<!--        tools:listitem="@layout/item_film_viewholder"-->
+<!--        />-->
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/addBtn"
         android:layout_width="wrap_content"
@@ -34,5 +64,4 @@
         android:layout_marginEnd="20dp"
         android:layout_marginBottom="20dp"
         android:src="@drawable/ic_add"/>
-
 </RelativeLayout>

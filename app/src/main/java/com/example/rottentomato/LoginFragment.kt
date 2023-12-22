@@ -24,6 +24,10 @@ class LoginFragment : Fragment() {
     private var db = FirebaseFirestore.getInstance()
     private lateinit var sharedPreferences: SharedPreferences
 
+    companion object {
+        const val EXTRA_EMAIL = "extra_email"
+        const val EXTRA_PASS = "extra_password"
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,7 +59,7 @@ class LoginFragment : Fragment() {
         }
         // Check if the user is already logged in
         if (isLoggedIn()) {
-            redirectToHomeScreen()
+            redirectToAppropriateScreen()
         }
         return view
     }
@@ -117,11 +121,11 @@ class LoginFragment : Fragment() {
                     isPasswordValid(email, password).thenApply { isValid ->
                         if (isValid) {
                             saveLoginStatus(true)
-                            redirectToHomeScreen()
+                            redirectToAppropriateScreen()
                         } else {
                             // Password tidak cocok
                             saveLoginStatus(false)
-                            showError("Invalid email or password")
+                            showError("Invalid password")
                         }
                     }
                 } else {
@@ -131,6 +135,25 @@ class LoginFragment : Fragment() {
                     // Tambahkan logika sesuai kebutuhan setelah login gagal
                 }
             }
+    }
+
+    private fun isUserAdmin(email: String) {
+        val admin = firebaseAuth.currentUser
+        if (admin != null){
+            if (admin.email == "admin@gmail.com") {
+                // Pengguna adalah admin
+                startActivity(Intent(requireContext(), AdminActivity::class.java).apply {
+                    putExtra(EXTRA_EMAIL, email)
+                    putExtra(EXTRA_PASS, binding.password.text.toString().trim())
+                })
+            } else {
+                // Pengguna bukan admin
+                startActivity(Intent(requireContext(), MainActivity::class.java).apply {
+                    putExtra(EXTRA_EMAIL, email)
+                    putExtra(EXTRA_PASS, binding.password.text.toString().trim())
+                })
+            }
+        }
     }
 
     private fun saveLoginStatus(isLoggedIn: Boolean) {
@@ -145,11 +168,12 @@ class LoginFragment : Fragment() {
         return sharedPreferences.getBoolean("isLoggedIn", false)
     }
 
-    private fun redirectToHomeScreen() {
-        val intentToHomeScreen = Intent(requireContext(), HomeScreenActivity::class.java)
-        startActivity(intentToHomeScreen)
-        requireActivity().finish()
+    private fun redirectToAppropriateScreen() {
+        // Arahkan ke halaman yang sesuai berdasarkan status admin
+        val email = sharedPreferences.getString("email", "") ?: ""
+        isUserAdmin(email)
     }
+
     private fun showError(errorMessage: String) {
         // Tampilkan pesan kesalahan kepada pengguna
         Toast.makeText(requireContext(), errorMessage, Toast.LENGTH_SHORT).show()

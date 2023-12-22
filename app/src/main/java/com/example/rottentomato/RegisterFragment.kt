@@ -112,44 +112,95 @@ class RegisterFragment : Fragment() {
         return true
     }
     private fun registerUser(username: String, email: String, password: String) {
+        val isAdmin = isUserAdmin(email)
         firebaseAuth.createUserWithEmailAndPassword(email, password)
             .addOnCompleteListener(requireActivity()) { task ->
                 if (task.isSuccessful) {
                     // Logika setelah registrasi berhasil
-                    val userId = firebaseAuth.currentUser?.uid ?: ""
+                    val userId = firebaseAuth.currentUser?.uid
                     // Simpan data pengguna ke Firestore
                     val user = hashMapOf(
                         "username" to username,
                         "email" to email,
                         "password" to password
                     )
-                    db.collection("users")
-                        .document(userId)
-                        .set(user)
-                        .addOnSuccessListener {
-                            // Data pengguna berhasil disimpan
-                            redirectToHomeScreen(username, email, password)
-                        }
-                        .addOnFailureListener {
-                            showError("Registration failed")
-                        }
+
+                    if (isAdmin) {
+                        // Untuk pengguna admin, simpan di koleksi "admin"
+                        db.collection("admin")
+                            .document(userId ?: "")
+                            .set(user)
+                            .addOnSuccessListener {
+                                // Data admin berhasil disimpan
+                                redirectToAdminScreen(username, email, password)
+                            }
+                            .addOnFailureListener { e ->
+                                showError("Admin registration failed: ${e.message}")
+                            }
+                    } else {
+                        db.collection("users")
+                            .document(userId ?: "")
+                            .set(user)
+                            .addOnSuccessListener {
+                                // Data pengguna berhasil disimpan
+                                redirectToHomeScreen(username, email, password)
+                            }
+                            .addOnFailureListener { e ->
+                                showError("User registration failed: ${e.message}")
+                            }
+                    }
                 } else {
                     // Registrasi gagal
                     // Tambahkan logika sesuai kebutuhan setelah registrasi gagal
+                    showError("Registration failed: ${task.exception?.message}")
                 }
             }
     }
-    private fun redirectToHomeScreen(name: String, email: String, password: String, clearTask: Boolean = true) {
+
+    private fun isUserAdmin(email: String): Boolean {
+        // Periksa apakah pengguna adalah admin berdasarkan alamat email
+        return email.endsWith("@admin.com")
+    }
+    private fun redirectToHomeScreen(
+        name: String,
+        email: String,
+        password: String,
+        clearTask: Boolean = true
+    ) {
         val intentToHomeScreen = Intent(requireContext(), HomeScreenActivity::class.java)
         intentToHomeScreen.putExtra(EXTRA_USERNAME, name)
         intentToHomeScreen.putExtra(EXTRA_EMAIL, email)
         intentToHomeScreen.putExtra(EXTRA_PASS, password)
 
         if (clearTask) {
-            intentToHomeScreen.flags = Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+            intentToHomeScreen.flags =
+                Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
         }
 
         startActivity(intentToHomeScreen)
+
+        if (clearTask) {
+            requireActivity().finish()
+        }
+    }
+
+    private fun redirectToAdminScreen(
+        name: String,
+        email: String,
+        password: String,
+        clearTask: Boolean = true
+    ) {
+        val intentToAdminScreen = Intent(requireContext(), AdminActivity::class.java)
+        intentToAdminScreen.putExtra(EXTRA_USERNAME, name)
+        intentToAdminScreen.putExtra(EXTRA_EMAIL, email)
+        intentToAdminScreen.putExtra(EXTRA_PASS, password)
+
+        if (clearTask) {
+            intentToAdminScreen.flags =
+                Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK
+        }
+
+        startActivity(intentToAdminScreen)
 
         if (clearTask) {
             requireActivity().finish()

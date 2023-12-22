@@ -19,10 +19,7 @@
             android:name=".AddFilmActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-        <activity
-            android:name=".TambahFilmActivity"
+            android:name=".AdminActivity"
             android:exported="false" />
         <activity
             android:name=".EditFilmActivity"
@@ -31,7 +28,7 @@
             android:name=".HomeScreenActivity"
             android:exported="false" />
         <activity
-            android:name=".AdminActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
